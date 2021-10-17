@@ -4,7 +4,9 @@
 # Reproducing the environment
 **Note I am assuming you have at least julia 1.6 installed**
 
-Additionally you will require ehtim to be installed in a system aware python. Currently I am just using the build in fft so `pip install ehtim`
+Additionally you will require ehtim and dynesty to be installed in a system aware python. Currently I am just using the build in fft so 
+`pip install ehtim`
+`pip install dynesty`
 should be enough. 
 
 If for some reason Julia is looking at the wrong python installation please open a Julia REPL and type
