@@ -1,6 +1,6 @@
 using Distributed
 @everywhere begin
-    using Pkg; Pkg.activate("../")
+    using Pkg; Pkg.activate(joinpath(@__DIR__, "../"))
 end
 using Comonicon
 using DrWatson
