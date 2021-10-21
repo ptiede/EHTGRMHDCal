@@ -50,7 +50,11 @@ would like to analyze. For the other options please see the docstring of the mai
 **Note this will seem to hang at the begining. This is because Julia uses a JIT compiler which means it is called just before its first called**
 
 # What about on clusters?
-If you are using a single node then the -p option will work great. If you are using multiple nodes then it will fail! For a multiple node job there are two options. For a slurm cluster create a batch submision using
+If you are using a single node then the -p option will work great. If you are using multiple nodes then it will fail! For a multiple node job there are two options. 
+
+
+## Slurm
+For a slurm cluster create a batch submission using
 
 ```
 #!/bin/sh
@@ -64,3 +68,16 @@ srun hostname -s > hostfile
 julia --machine-file ./hostfile main.jl filelist --data ../data/hops_3599_SGRA_LO_netcal_LMTcal_normalized_10s_preprocessed_snapshot_60_noisefrac0.05_scan252.uvfits --pa 90 --out test.csv  --stride 200
 
 ```
+
+## Harvard Hydra
+
+On Harvard's hydra cluster I have had some issues getting everything to work. The best way forward I found was to use the ClusterManagers.jl package to directly ask for resources. This is partly automated using src/main_hydra.jl. You will need to change one thing in this script for your resources. Specifically 
+
+```
+addprocs_sge(80; qsub_flags=`-l s_cpu=24:00:00 -l mres=4G,h_data=4G,h_vmem=4G`, wd=pwd())
+```
+
+This will ask hydra for 80 cores throughout the cluster. Please change 80 to however many cores you want.
+You may want to ask for a single node to lower communication. 
+
+
