@@ -48,3 +48,19 @@ The only argument that isn't optional is `filelist`. This is a file that contain
 would like to analyze. For the other options please see the docstring of the main function.
 
 **Note this will seem to hang at the begining. This is because Julia uses a JIT compiler which means it is called just before its first called**
+
+# What about on clusters?
+If you are using a single node then the -p option will work great. If you are using multiple nodes then it will fail! For a multiple node job there are two options. For a slurm cluster create a batch submision using
+
+```
+#!/bin/sh
+
+#SBATCH .... #insert usual sbatch stuff
+
+# create a host/machine file
+srun hostname -s > hostfile
+
+# now pass this machine file to julia
+julia --machine-file ./hostfile main.jl filelist --data ../data/hops_3599_SGRA_LO_netcal_LMTcal_normalized_10s_preprocessed_snapshot_60_noisefrac0.05_scan252.uvfits --pa 90 --out test.csv  --stride 200
+
+```
