@@ -1,6 +1,7 @@
 using ROSESoss
 using BlackBoxOptim
-import Distributions as Dists
+import Distributions
+const Dists = Distributions
 using HypercubeTransform
 using CSV
 using DataFrames
