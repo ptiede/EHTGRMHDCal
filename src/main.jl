@@ -2,6 +2,7 @@ using Distributed
 @everywhere begin
     using Pkg; Pkg.activate(joinpath(@__DIR__, "../"))
 end
+Pkg.instantiate()
 using Comonicon
 using DrWatson
 using DelimitedFiles

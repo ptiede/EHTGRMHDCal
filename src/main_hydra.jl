@@ -1,4 +1,5 @@
-using Pkg; Pkg.activate("../")
+using Pkg; Pkg.activate(joinpath(@__DIR__, "../"))
+Pkg.instantiate()
 using ClusterManagers, Distributed
 
 #Change the number of processors you want to use here. Right now I am using 220
@@ -6,7 +7,7 @@ using ClusterManagers, Distributed
 addprocs_sge(200; qsub_flags=`-l s_cpu=24:00:00 -l mres=4G,h_data=4G,h_vmem=4G`, wd=pwd())
 
 @everywhere begin
-    using Pkg; Pkg.activate("../")
+    using Pkg; Pkg.activate(joinpath(@__DIR__, "../"))
 end
 using Comonicon
 using DrWatson
