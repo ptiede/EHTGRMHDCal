@@ -846,6 +846,12 @@ git-tree-sha1 = "42d48cac95e0fee730ba2fff477adc68c52c65f4"
 uuid = "6fafb56a-5788-4b4e-91ca-c0cea6611c73"
 version = "0.1.13"
 
+[[Metaheuristics]]
+deps = ["LinearAlgebra", "Pkg", "Printf", "Random", "Statistics", "Test", "UnicodePlots"]
+git-tree-sha1 = "efc822bccf12c3dc3b0c8e7ab5433160b400075e"
+uuid = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
+version = "3.0.3"
+
 [[Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "bf210ce90b6c9eed32d25dbcae1ebc565df2687f"
@@ -1439,6 +1445,12 @@ version = "1.0.2"
 
 [[Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+
+[[UnicodePlots]]
+deps = ["Crayons", "Dates", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "dc9c7086d41783f14d215ea0ddcca8037a8691e9"
+uuid = "b8865327-cd53-5732-bb35-84acbb429228"
+version = "1.4.0"
 
 [[UnsafeArrays]]
 git-tree-sha1 = "038cd6ae292c857e6f91be52b81236607627aacd"

@@ -1,11 +1,15 @@
 using ROSESoss
 using BlackBoxOptim
+using Metaheuristics
 import Distributions
 const Dists = Distributions
 using HypercubeTransform
 using CSV
 using DataFrames
 using NamedTupleTools
+import Metaheuristics
+const MH = Metaheuristics
+
 const fwhmfac = 2*sqrt(2*log(2))
 
 
@@ -90,7 +94,7 @@ function create_joint_nog(model,
 end
 
 
-function loaddata(imfile, datafile, pa)
+function loaddata(imfile, datafile, pa; ferr=0.0)
     # Load the image
     img = ehtim.image.load_image(imfile)
     img.imvec /= img.total_flux()
@@ -100,6 +104,7 @@ function loaddata(imfile, datafile, pa)
 
     # Load the observation
     obs = ehtim.obsdata.load_uvfits(datafile)
+    obs.add_fractional_noise(ferr)
     img.rf = obs.rf
     img.ra = obs.ra
     img.dec = obs.dec
@@ -113,10 +118,10 @@ function loaddata(imfile, datafile, pa)
     return damp, dcp
 end
 
-function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=70_000)
+function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_000)
     damp, dcp = loaddata(imfile, datafile, pa)
     cmg = create_joint_nog(model, damp, dcp)
-    opt, stats = ROSESoss.optimize(BBO(maxevals=maxevals, tracemode=:silent), cmg)
+    opt, stats = ROSESoss.optimize(ROSESoss.MetaH(alg=MH.ECA(N=100,options=MH.Options(f_calls_limit=maxevals))), cmg)
 
     bl = ROSE.getdata(damp, :baselines)
     s1 = first.(bl)
@@ -128,6 +133,7 @@ function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=70_00
 
     chi2amp = chi2(mopt, damp, gains)/ROSE.nsamples(damp)
     chi2cp = chi2(mopt, dcp)/ROSE.nsamples(dcp)
+
 
     df = (pa = pa, diam = opt.img.diam,
                    α=opt.img.fwhm,
