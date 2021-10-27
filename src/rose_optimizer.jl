@@ -110,7 +110,7 @@ function loaddata(imfile, datafile, pa; ferr=0.0)
     img.dec = obs.dec
 
     # Create a synthetic observation to fit
-    obs_fit = img.observe_same(obs, ttype="fast", ampcal=true, phasecal=true, add_th_noise=false)
+    obs_fit = img.observe_same(obs, ttype="fast", ampcal=true, phasecal=true, add_th_noise=true)
     obs_fit.add_amp(debias=true)
     obs_fit.add_cphase(count="min")
     damp = ROSESoss.extract_amps(obs_fit)
@@ -141,6 +141,7 @@ function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_00
                    fwhm_g=opt.img.dg,
                    amp1 = opt.img.ma[1],
                    chi2_amp = chi2amp,
-                   chi2_cp = chi2cp)
+                   chi2_cp = chi2cp,
+                   logp = stats)
     return df
 end

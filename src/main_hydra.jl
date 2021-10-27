@@ -67,10 +67,11 @@ Run the mring optimizer on a list of hdf5 grmhd files
                        diam     = zeros(nfiles),
                        α        = zeros(nfiles),
                        ff       = zeros(nfiles),
-                       fwhm_g    = zeros(nfiles),
+                       fwhm_g   = zeros(nfiles),
                        amp1     = zeros(nfiles),
                        chi2_amp = zeros(nfiles),
-                       chi2_cp = zeros(nfiles),
+                       chi2_cp  = zeros(nfiles),
+                       logp     = zeros(nfiles),
                        file     = flist
                        )
 
