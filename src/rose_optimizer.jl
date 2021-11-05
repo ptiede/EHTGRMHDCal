@@ -140,6 +140,8 @@ function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_00
                    ff=opt.img.floor,
                    fwhm_g=opt.img.dg,
                    amp1 = opt.img.ma[1],
+                   amp2 = opt.img.ma[2],
+                   amp3 = opt.img.ma[3],
                    chi2_amp = chi2amp,
                    chi2_cp = chi2cp,
                    logp = stats)
