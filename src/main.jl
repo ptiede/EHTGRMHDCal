@@ -1,7 +1,19 @@
+
 using Distributed
 @everywhere begin
     using Pkg; Pkg.activate(joinpath(@__DIR__, "../"))
 end
+#try
+#    Pkg.resolve()
+#    Pkg.update()
+#catch
+#    println("I am guessing you are using Julia 1.5 using a hack to get around dependency issues")
+#    Pkg.rm("ROSE")
+#    Pkg.rm("ROSESoss")
+#    Pkg.instantiate()
+#    Pkg.add(url="https://github.com/ptiede/ROSE.jl")
+#    Pkg.add(url="https://github.com/ptiede/ROSESoss.jl")
+#end
 Pkg.instantiate()
 using Comonicon
 using DrWatson
@@ -34,7 +46,7 @@ function rundata(flist, pa_f, data, out, stride)
 
         pitr = Iterators.partition(eachindex(flist), stride)
         for p in pitr
-            rows = pmap(p) do i
+            rows = pmap(p; batch_size=50) do i
                 fit_file(flist[i], data, pa)
             end
             @info "Checkpointing"
