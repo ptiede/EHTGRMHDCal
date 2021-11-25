@@ -3,7 +3,6 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=2
 #SBATCH --time=00:05:00
-#SBATCH --partition=development
 #SBATCH --output=%x_%j.log
 #SBATCH --job-name=precompile_everywhere
 
