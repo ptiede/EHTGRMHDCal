@@ -19,7 +19,7 @@ set -x
 # Exit on any error
 set -e
 # Prepare the project; I don't know why these are all used, but they are
-julia --project=@. -e 'using Pkg; Pkg.add(["Distributed", "ClusterManagers", "Sockets", "Serialization", "Logging", "LinearAlgebra", "REPL"])'
+julia --project=. -e 'using Pkg; Pkg.add(["Distributed", "ClusterManagers", "Sockets", "Serialization", "Logging", "LinearAlgebra", "REPL"])'
 # Run @everywhere 1+2 on 2 processes and trace
 julia --trace-compile=precompile01.jl "${BASH_SOURCE[0]}" everywhere
 # Combine the precompilation files into one
