@@ -2,7 +2,7 @@
 # -*- mode: julia -*-
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=2
-#SBATCH --time=00:05:00
+#SBATCH --time=00:10:00
 #SBATCH --output=%x_%j.log
 #SBATCH --job-name=precompile_everywhere
 
@@ -19,7 +19,7 @@ set -x
 # Exit on any error
 set -e
 # Prepare the project; I don't know why these are all used, but they are
-julia -e 'using Pkg; Pkg.add(["Distributed", "ClusterManagers", "Sockets", "Serialization", "Logging", "LinearAlgebra", "REPL"])'
+julia --project=@. -e 'using Pkg; Pkg.add(["Distributed", "ClusterManagers", "Sockets", "Serialization", "Logging", "LinearAlgebra", "REPL"])'
 # Run @everywhere 1+2 on 2 processes and trace
 julia --trace-compile=precompile01.jl "${BASH_SOURCE[0]}" everywhere
 # Combine the precompilation files into one
@@ -35,7 +35,7 @@ You should be able to move the .so file around on this system, but you probably
 won't be able to move it to different systems.
 EOF
 =#
-
+using Pkg; Pkg.activate(@__DIR__)
 using PackageCompiler
 using Distributed
 using ClusterManagers
