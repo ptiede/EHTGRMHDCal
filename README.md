@@ -41,8 +41,9 @@ everything should work out of the box, including correctly finding local paths.
 The main script you should look at in this repo is src/main.jl
 To use it do something like
 ```
-julia -p 2 main.jl filelist --data ../data/hops_3599_SGRA_LO_netcal_LMTcal_normalized_10s_preprocessed_snapshot_60_noisefrac0.05_scan252.uvfits --pa 90 --out test.csv  --stride 200
+julia -p 2 main.jl filelist --out test.csv  --stride 200
 ```
+**Note that by default the script will load the data in data/"snapshot_fitting_scans_120s_noisefrac0.05"**
 
 The only argument that isn't optional is `filelist`. This is a file that contains the paths of all the hdf5 file you
 would like to analyze. For the other options please see the docstring of the main function.
@@ -68,7 +69,6 @@ srun hostname -s > hostfile
 julia --machine-file ./hostfile main.jl filelist --out test.csv  --stride 200
 
 ```
-**Note that by default the script will load the data in data/"snapshot_fitting_scans_120s_noisefrac0.05"**
 
 ## Harvard Hydra
 
