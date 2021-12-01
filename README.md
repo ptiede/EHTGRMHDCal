@@ -65,9 +65,10 @@ For a slurm cluster create a batch submission using
 srun hostname -s > hostfile
 
 # now pass this machine file to julia
-julia --machine-file ./hostfile main.jl filelist --data ../data/hops_3599_SGRA_LO_netcal_LMTcal_normalized_10s_preprocessed_snapshot_60_noisefrac0.05_scan252.uvfits --pa 90 --out test.csv  --stride 200
+julia --machine-file ./hostfile main.jl filelist --out test.csv  --stride 200
 
 ```
+**Note that by default the script will load the data in data/"snapshot_fitting_scans_120s_noisefrac0.05"**
 
 ## Harvard Hydra
 
