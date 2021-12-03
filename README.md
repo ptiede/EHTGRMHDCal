@@ -41,7 +41,7 @@ everything should work out of the box, including correctly finding local paths.
 The main script you should look at in this repo is src/main.jl
 To use it do something like
 ```
-julia -p 2 main.jl filelist --out test.csv  --stride 200
+julia -p 2 main.jl filelist --out test.csv -pa "[0.0, 45.0, 90.0, 135.0]"  --stride 200
 ```
 **Note that by default the script will load the data in data/"snapshot_fitting_scans_120s_noisefrac0.05"**
 
@@ -66,7 +66,7 @@ For a slurm cluster create a batch submission using
 srun hostname -s > hostfile
 
 # now pass this machine file to julia
-julia --machine-file ./hostfile main.jl filelist --out test.csv  --stride 200
+julia --machine-file ./hostfile main.jl filelist --out test.csv -pa "[0.0, 45.0, 90.0, 135.0]"  --stride 200
 
 ```
 
