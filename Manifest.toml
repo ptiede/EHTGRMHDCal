@@ -218,7 +218,9 @@ version = "0.1.1"
 
 [[Comrade]]
 deps = ["AbstractFFTs", "Accessors", "AstroTime", "BasicInterpolators", "ChainRulesCore", "ComradeBase", "DelimitedFiles", "Distributions", "DocStringExtensions", "FFTW", "FillArrays", "ForwardDiff", "KeywordCalls", "LoopVectorization", "MappedArrays", "MeasureBase", "MeasureTheory", "NFFT", "PaddedViews", "PyCall", "Random", "Reexport", "SpecialFunctions", "StaticArrays", "Statistics", "StatsBase", "StructArrays"]
-path = "/home/ptiede/.julia/dev/Comrade"
+git-tree-sha1 = "a998c6b9d9ba6a3248c3f2c844ec12ebda3528d1"
+repo-rev = "main"
+repo-url = "https://github.com/ptiede/Comrade.jl"
 uuid = "99d987ce-9a1e-4df8-bc0b-1ea019aa547b"
 version = "0.2.0"
 
@@ -230,7 +232,9 @@ version = "0.2.0"
 
 [[ComradeSoss]]
 deps = ["Comrade", "Distributions", "HypercubeTransform", "LoopVectorization", "MLStyle", "MacroTools", "MeasureTheory", "NamedTupleTools", "NestedTuples", "ParameterHandling", "PyCall", "Random", "Reexport", "Requires", "Soss", "StatsBase", "StructArrays", "TransformVariables", "TupleVectors"]
-path = "/home/ptiede/.julia/dev/ComradeSoss"
+git-tree-sha1 = "c00460c152a3271cbc6cfc94ebfb5ce2af76742d"
+repo-rev = "main"
+repo-url = "https://github.com/ptiede/ComradeSoss.jl"
 uuid = "b453e4c4-4bcd-41c2-b157-cea5ea685e94"
 version = "0.1.1"
 
