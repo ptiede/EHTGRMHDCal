@@ -1,4 +1,4 @@
-using ROSESoss
+using ComradeSoss
 using BlackBoxOptim
 using Metaheuristics
 import Distributions
@@ -29,8 +29,8 @@ mringwgfloor = @model N begin
     floor ~ Dists.Uniform(0.0, 1.0)
     dg ~ Dists.Uniform(40.0, 300.0)
     rg = dg/fwhmfac
-    mring = smoothed(renormed(ROSE.MRing{N}(rad, α, β), (1-floor)), σ)
-    g = renormed(stretched(ROSE.Gaussian(), rg, rg), floor)
+    mring = smoothed(renormed(Comrade.MRing{N}(rad, α, β), (1-floor)), σ)
+    g = renormed(stretched(Comrade.Gaussian(), rg, rg), floor)
     img = mring + g
     return img
 end
@@ -40,14 +40,14 @@ vacp = @model image, uamp, vamp, erramp,
                u1cp, v1cp, u2cp, v2cp, u3cp, v3cp, errcp begin
 
     img ~ image
-    vamps = ROSE.visibility_amplitude.(Ref(img), uamp, vamp)
+    vamps = Comrade.visibility_amplitude.(Ref(img), uamp, vamp)
     amp ~ For(eachindex(vamps, erramp)) do i
             Dists.Normal(vamps[i], erramp[i])
     end
 
-    cphases = ROSE.closure_phase.(Ref(img), u1cp, v1cp, u2cp, v2cp, u3cp, v3cp)
+    cphases = Comrade.closure_phase.(Ref(img), u1cp, v1cp, u2cp, v2cp, u3cp, v3cp)
     cphase ~ For(eachindex(cphases, errcp)) do i
-        ROSE.CPVonMises(cphases[i], errcp[i])
+        Comrade.CPVonMises(cphases[i], errcp[i])
     end
 
 end
@@ -55,26 +55,26 @@ end
 
 
 function create_joint_nog(model,
-    ampobs::ROSE.EHTObservation{F,A},
-    cpobs::ROSE.EHTObservation{F,P};
+    ampobs::Comrade.EHTObservation{F,A},
+    cpobs::Comrade.EHTObservation{F,P};
     amppriors=(AA=0.1,AP=0.1,AZ=0.1,LM=0.2,JC=0.1,PV=0.1,SM=0.1, SP=0.1)
-    ) where {F, A<:ROSE.EHTVisibilityAmplitudeDatum,P<:ROSE.EHTClosurePhaseDatum}
-    uamp = ROSE.getdata(ampobs, :u)
-    vamp = ROSE.getdata(ampobs, :v)
-    bl = ROSE.getdata(ampobs, :baselines)
+    ) where {F, A<:Comrade.EHTVisibilityAmplitudeDatum,P<:Comrade.EHTClosurePhaseDatum}
+    uamp = Comrade.getdata(ampobs, :u)
+    vamp = Comrade.getdata(ampobs, :v)
+    bl = Comrade.getdata(ampobs, :baselines)
     #stations = Tuple(unique(vcat(s1,s2)))
     #gpriors = values(select(amppriors, stations))
-    erramp = ROSE.getdata(ampobs, :error)
-    amps = ROSE.getdata(ampobs, :amp)
+    erramp = Comrade.getdata(ampobs, :error)
+    amps = Comrade.getdata(ampobs, :amp)
 
-    u1cp = ROSE.getdata(cpobs, :u1)
-    v1cp = ROSE.getdata(cpobs, :v1)
-    u2cp = ROSE.getdata(cpobs, :u2)
-    v2cp = ROSE.getdata(cpobs, :v2)
-    u3cp = ROSE.getdata(cpobs, :u3)
-    v3cp = ROSE.getdata(cpobs, :v3)
-    errcp = ROSE.getdata(cpobs, :error)
-    cps = ROSE.getdata(cpobs, :phase)
+    u1cp = Comrade.getdata(cpobs, :u1)
+    v1cp = Comrade.getdata(cpobs, :v1)
+    u2cp = Comrade.getdata(cpobs, :u2)
+    v2cp = Comrade.getdata(cpobs, :v2)
+    u3cp = Comrade.getdata(cpobs, :u3)
+    v3cp = Comrade.getdata(cpobs, :v3)
+    errcp = Comrade.getdata(cpobs, :error)
+    cps = Comrade.getdata(cpobs, :phase)
 
     joint = vacp(
     image=model,
@@ -113,17 +113,17 @@ function loaddata(imfile, datafile, pa; ferr=0.0)
     obs_fit = img.observe_same(obs, ttype="fast", ampcal=true, phasecal=true, add_th_noise=true)
     obs_fit.add_amp(debias=true)
     obs_fit.add_cphase(count="min")
-    damp = ROSESoss.extract_amps(obs_fit)
-    dcp = ROSESoss.extract_cphase(obs_fit)
+    damp = ComradeSoss.extract_amps(obs_fit)
+    dcp = ComradeSoss.extract_cphase(obs_fit)
     return damp, dcp
 end
 
 function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_000)
     damp, dcp = loaddata(imfile, datafile, pa)
     cmg = create_joint_nog(model, damp, dcp)
-    opt, stats = ROSESoss.optimize(ROSESoss.MetaH(alg=MH.ECA(N=100,options=MH.Options(f_calls_limit=maxevals))), cmg)
+    opt, stats = ComradeSoss.optimize(ComradeSoss.MetaH(alg=MH.ECA(N=100,options=MH.Options(f_calls_limit=maxevals))), cmg)
 
-    bl = ROSE.getdata(damp, :baselines)
+    bl = Comrade.getdata(damp, :baselines)
     s1 = first.(bl)
     s2 = last.(bl)
     stations = Tuple(unique(vcat(s1,s2)))
@@ -131,8 +131,8 @@ function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_00
 
     mopt = Soss.predict(cmg.argvals[:image], opt[:img])
 
-    chi2amp = chi2(mopt, damp, gains)/ROSE.nsamples(damp)
-    chi2cp = chi2(mopt, dcp)/ROSE.nsamples(dcp)
+    chi2amp = chi2(mopt, damp, gains)/Comrade.nsamples(damp)
+    chi2cp = chi2(mopt, dcp)/Comrade.nsamples(dcp)
 
 
     df = (pa = pa, diam = opt.img.diam,

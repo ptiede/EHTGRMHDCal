@@ -8,11 +8,11 @@ end
 #    Pkg.update()
 #catch
 #    println("I am guessing you are using Julia 1.5 using a hack to get around dependency issues")
-#    Pkg.rm("ROSE")
-#    Pkg.rm("ROSESoss")
+#    Pkg.rm("Comrade")
+#    Pkg.rm("ComradeSoss")
 #    Pkg.instantiate()
-#    Pkg.add(url="https://github.com/ptiede/ROSE.jl")
-#    Pkg.add(url="https://github.com/ptiede/ROSESoss.jl")
+#    Pkg.add(url="https://github.com/ptiede/Comrade.jl")
+#    Pkg.add(url="https://github.com/ptiede/ComradeSoss.jl")
 #end
 Pkg.instantiate()
 using Comonicon
@@ -20,9 +20,9 @@ using DrWatson
 using DelimitedFiles
 using DataFrames
 using CSV
-using ROSESoss
+using ComradeSoss
 
-@everywhere include("rose_optimizer.jl")
+@everywhere include("comrade_optimizer.jl")
 
 function rundata(flist, pa_f, data, out, stride)
 
