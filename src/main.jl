@@ -22,6 +22,8 @@ using DataFrames
 using CSV
 using ComradeSoss
 
+load_ehtim()
+
 @everywhere include("comrade_optimizer.jl")
 
 function rundata(flist, pa_f, data, out, stride)
@@ -46,7 +48,7 @@ function rundata(flist, pa_f, data, out, stride)
 
         pitr = Iterators.partition(eachindex(flist), stride)
         for p in pitr
-            rows = pmap(p; batch_size=50) do i
+            rows = map(p) do i
                 fit_file(flist[i], data, pa)
             end
             @info "Checkpointing"
@@ -96,8 +98,6 @@ Run the mring optimizer on a list of hdf5 grmhd files
     flist = open(x, "r") do io
         files = readlines(io)
     end
-
-
     #Read in the list of data scans
     dlist = open(x, "r") do io
         readlines(io)

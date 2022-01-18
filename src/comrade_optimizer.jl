@@ -16,7 +16,7 @@ const fwhmfac = 2*sqrt(2*log(2))
 
 mringwgfloor = @model N begin
     diam ~ Dists.Uniform(25.0, 85.0)
-    fwhm ~ Dists.Uniform(1.0, 50.0)
+    fwhm ~ Dists.Uniform(1.0, 40.0)
     rad = diam/2
     σ = fwhm/fwhmfac
 
@@ -29,9 +29,9 @@ mringwgfloor = @model N begin
     floor ~ Dists.Uniform(0.0, 1.0)
     dg ~ Dists.Uniform(40.0, 300.0)
     rg = dg/fwhmfac
-    mring = smoothed(renormed(Comrade.MRing{N}(rad, α, β), (1-floor)), σ)
-    g = renormed(stretched(Comrade.Gaussian(), rg, rg), floor)
-    img = mring + g
+    mring = smoothed(stretched(Comrade.MRing{N}(α, β), rad, rad), σ)
+    g = stretched(Comrade.Gaussian(), rg, rg)
+    img = mring*(1-floor) + g*floor
     return img
 end
 
@@ -40,15 +40,13 @@ vacp = @model image, uamp, vamp, erramp,
                u1cp, v1cp, u2cp, v2cp, u3cp, v3cp, errcp begin
 
     img ~ image
-    vamps = Comrade.visibility_amplitude.(Ref(img), uamp, vamp)
+    vamps = Comrade.amplitudes(img, uamp, vamp)
     amp ~ For(eachindex(vamps, erramp)) do i
             Dists.Normal(vamps[i], erramp[i])
     end
 
-    cphases = Comrade.closure_phase.(Ref(img), u1cp, v1cp, u2cp, v2cp, u3cp, v3cp)
-    cphase ~ For(eachindex(cphases, errcp)) do i
-        Comrade.CPVonMises(cphases[i], errcp[i])
-    end
+    cphases = Comrade.closure_phases(img, u1cp, v1cp, u2cp, v2cp, u3cp, v3cp)
+    cphase ~ Comrade.CPVonMises{(:μ,:σ)}(cphases, errcp)
 
 end
 
@@ -57,11 +55,10 @@ end
 function create_joint_nog(model,
     ampobs::Comrade.EHTObservation{F,A},
     cpobs::Comrade.EHTObservation{F,P};
-    amppriors=(AA=0.1,AP=0.1,AZ=0.1,LM=0.2,JC=0.1,PV=0.1,SM=0.1, SP=0.1)
     ) where {F, A<:Comrade.EHTVisibilityAmplitudeDatum,P<:Comrade.EHTClosurePhaseDatum}
     uamp = Comrade.getdata(ampobs, :u)
     vamp = Comrade.getdata(ampobs, :v)
-    bl = Comrade.getdata(ampobs, :baselines)
+    bl = Comrade.getdata(ampobs, :baseline)
     #stations = Tuple(unique(vcat(s1,s2)))
     #gpriors = values(select(amppriors, stations))
     erramp = Comrade.getdata(ampobs, :error)
@@ -78,15 +75,15 @@ function create_joint_nog(model,
 
     joint = vacp(
     image=model,
-    uamp=uamp,
-    vamp=vamp,
+    uamp=μas2rad(uamp),
+    vamp=μas2rad(vamp),
     erramp=erramp,
-    u1cp = u1cp,
-    v1cp = v1cp,
-    u2cp = u2cp,
-    v2cp = v2cp,
-    u3cp = u3cp,
-    v3cp = v3cp,
+    u1cp = μas2rad(u1cp),
+    v1cp = μas2rad(v1cp),
+    u2cp = μas2rad(u2cp),
+    v2cp = μas2rad(v2cp),
+    u3cp = μas2rad(u3cp),
+    v3cp = μas2rad(v3cp),
     errcp = errcp
     )
     conditioned = (amp = amps, cphase = cps,)
@@ -111,10 +108,10 @@ function loaddata(imfile, datafile, pa; ferr=0.0)
 
     # Create a synthetic observation to fit
     obs_fit = img.observe_same(obs, ttype="fast", ampcal=true, phasecal=true, add_th_noise=true)
-    obs_fit.add_amp(debias=true)
-    obs_fit.add_cphase(count="min")
-    damp = ComradeSoss.extract_amps(obs_fit)
-    dcp = ComradeSoss.extract_cphase(obs_fit)
+    #obs_fit.add_amp(debias=true)
+    #obs_fit.add_cphase(count="min-cut0bl")
+    damp = Comrade.extract_amp(obs_fit; debias=true)
+    dcp = Comrade.extract_cphase(obs_fit; count="min-cut0bl")
     return damp, dcp
 end
 
@@ -123,7 +120,7 @@ function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_00
     cmg = create_joint_nog(model, damp, dcp)
     opt, stats = ComradeSoss.optimize(ComradeSoss.MetaH(alg=MH.ECA(N=100,options=MH.Options(f_calls_limit=maxevals))), cmg)
 
-    bl = Comrade.getdata(damp, :baselines)
+    bl = Comrade.getdata(damp, :baseline)
     s1 = first.(bl)
     s2 = last.(bl)
     stations = Tuple(unique(vcat(s1,s2)))
@@ -131,8 +128,8 @@ function fit_file(imfile, datafile, pa; model=mringwgfloor(N=3,), maxevals=75_00
 
     mopt = Soss.predict(cmg.argvals[:image], opt[:img])
 
-    chi2amp = chi2(mopt, damp, gains)/Comrade.nsamples(damp)
-    chi2cp = chi2(mopt, dcp)/Comrade.nsamples(dcp)
+    chi2amp = chi2(mopt, damp, gains)/length(damp)
+    chi2cp = chi2(mopt, dcp)/length(dcp)
 
 
     df = (pa = pa, diam = opt.img.diam,
