@@ -41,8 +41,9 @@ everything should work out of the box, including correctly finding local paths.
 The main script you should look at in this repo is src/main.jl
 To use it do something like
 ```
-julia -p 2 main.jl filelist --data ../data/hops_3599_SGRA_LO_netcal_LMTcal_normalized_10s_preprocessed_snapshot_60_noisefrac0.05_scan252.uvfits --pa 90 --out test.csv  --stride 200
+julia -p 2 main.jl filelist --out test.csv --pa "[0.0, 45.0, 90.0, 135.0]"  --stride 200
 ```
+**Note that by default the script will load the data in data/"snapshot_fitting_scans_120s_noisefrac0.05"**
 
 The only argument that isn't optional is `filelist`. This is a file that contains the paths of all the hdf5 file you
 would like to analyze. For the other options please see the docstring of the main function.
@@ -65,7 +66,7 @@ For a slurm cluster create a batch submission using
 srun hostname -s > hostfile
 
 # now pass this machine file to julia
-julia --machine-file ./hostfile main.jl filelist --data ../data/hops_3599_SGRA_LO_netcal_LMTcal_normalized_10s_preprocessed_snapshot_60_noisefrac0.05_scan252.uvfits --pa 90 --out test.csv  --stride 200
+julia --machine-file ./hostfile main.jl filelist --out test.csv --pa "[0.0, 45.0, 90.0, 135.0]"  --stride 200
 
 ```
 
@@ -79,5 +80,7 @@ addprocs_sge(80; qsub_flags=`-l s_cpu=24:00:00 -l mres=4G,h_data=4G,h_vmem=4G`, 
 
 This will ask hydra for 80 cores throughout the cluster. Please change 80 to however many cores you want.
 You may want to ask for a single node to lower communication. 
+
+
 
 
