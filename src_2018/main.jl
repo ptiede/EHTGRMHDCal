@@ -36,8 +36,6 @@ function rundata(flist, pa_f, data, out, stride)
                        ff       = zeros(nfiles),
                        fwhm_g   = zeros(nfiles),
                        amp1     = zeros(nfiles),
-                       amp2     = zeros(nfiles),
-                       amp3     = zeros(nfiles),
                        chi2_amp = zeros(nfiles),
                        chi2_cp  = zeros(nfiles),
                        logp     = zeros(nfiles),
