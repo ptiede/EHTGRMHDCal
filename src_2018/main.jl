@@ -19,10 +19,9 @@ using Comonicon
 using DelimitedFiles
 using DataFrames
 using CSV
-using ComradeSoss
+using Comrade
 
 load_ehtim()
-
 @everywhere include("comrade_optimizer.jl")
 
 function rundata(flist, pa_f, data, out, stride)

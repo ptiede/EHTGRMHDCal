@@ -1,11 +1,13 @@
 using Comrade
 using ComradeOptimization
-using OptimizationMetaheuristics
-import Distributions
-const Dists = Distributions
+using OptimizationBBO
+using Distributions
 using CSV
 using DataFrames
 using NamedTupleTools
+using VLBIImagePriors
+
+load_ehtim()
 
 const fwhmfac = 2*sqrt(2*log(2))
 
@@ -15,8 +17,8 @@ function mringwgfloor(θ)
 
     rad = diam/2
     σ   = fwhm/fwhmfac
-    α = ma.*cos.(mp)
-    β = ma.*sin.(mp)
+    α = reshape(ma.*cos.(mp), :)
+    β = reshape(ma.*sin.(mp), :)
     ring = smoothed(modify(MRing(α, β), Stretch(rad, rad)), σ)
 
     rg   = diam/fwhmfac*ϵ
@@ -37,9 +39,9 @@ function create_prior(::typeof(mringwgfloor), nmodes)
         )
 end
 
-function create_post(model, data...)
+function create_post(model, modes, data...)
     lklhd = RadioLikelihood(model, data...)
-    prior = create_prior(model)
+    prior = create_prior(model, modes)
     return Posterior(lklhd, prior)
 end
 
@@ -53,7 +55,7 @@ function loaddata(imfile, datafile, pa; f0=0.6, ferr=0.0)
     img.pa = pa
 
     # Load the observation
-    obs = ehtim.obsdata.load_uvfits(datafile)
+    obs = scan_average(ehtim.obsdata.load_uvfits(datafile))
     obs.add_fractional_noise(ferr)
     img.rf = obs.rf
     img.ra = obs.ra
@@ -63,23 +65,23 @@ function loaddata(imfile, datafile, pa; f0=0.6, ferr=0.0)
     obs_fit = img.observe_same(obs, ttype="fast", ampcal=true, phasecal=true, add_th_noise=true)
     #obs_fit.add_amp(debias=true)
     #obs_fit.add_cphase(count="min-cut0bl")
-    damp = Comrade.extract_lcamp(obs_fit; snrcut=3.0)
-    dcp = Comrade.extract_cphase(obs_fit; snrcut=3.0)
+    damp = extract_lcamp(obs_fit; snrcut=3.0)
+    dcp  = extract_cphase(obs_fit; snrcut=3.0)
     return damp, dcp
 end
 
 function fit_file(imfile, datafile, pa; modes=1, model=mringwgfloor, maxevals=75_000)
     damp, dcp = loaddata(imfile, datafile, pa)
-    post = create_post(model, damp, dcp)
+    post = create_post(model, modes, damp, dcp)
 
 
-    cpost = ascube(post)
+    cpost = asflat(post)
     ndim = dimension(cpost)
     fopt  = OptimizationFunction(cpost)
-    prob  = Optimization.OptimizationProblem(fopt, rand(ndim), nothing, lb=fill(0.001, ndim), ub = fill(0.999, ndim))
-    sol   = solve(prob, ECA(), maxiters=maxevals)
+    prob  = Optimization.OptimizationProblem(fopt, rand(ndim), nothing, lb=fill(-5.0, ndim), ub = fill(5.0, ndim))
+    sol   = solve(prob, ECA(); maxiters=maxevals)
 
-    xopt = transform(cpost, sol.u)
+    xopt = Comrade.transform(cpost, sol.u)
 
     chi2amp = chi2(model(xopt), damp)/length(damp)
     chi2cp  = chi2(model(xopt), dcp)/length(dcp)
