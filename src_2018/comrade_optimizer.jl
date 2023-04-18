@@ -1,6 +1,6 @@
 using Comrade
 using ComradeOptimization
-using OptimizationBBO
+using OptimizationMetaheuristics
 using Distributions
 using CSV
 using DataFrames
@@ -70,7 +70,7 @@ function loaddata(imfile, datafile, pa; f0=0.6, ferr=0.0)
     return damp, dcp
 end
 
-function fit_file(imfile, datafile, pa; modes=1, model=mringwgfloor, maxevals=75_000)
+function fit_file(imfile, datafile, pa; modes=1, model=mringwgfloor, maxevals=200_000)
     damp, dcp = loaddata(imfile, datafile, pa)
     post = create_post(model, modes, damp, dcp)
 
@@ -85,6 +85,7 @@ function fit_file(imfile, datafile, pa; modes=1, model=mringwgfloor, maxevals=75
 
     chi2amp = chi2(model(xopt), damp)/length(damp)
     chi2cp  = chi2(model(xopt), dcp)/length(dcp)
+    rchi2   = chi2(model(xopt), damp, dcp)/(length(damp) + length(dcp) - ndim)
 
 
     df = (pa = pa, diam = xopt.diam,
@@ -94,6 +95,7 @@ function fit_file(imfile, datafile, pa; modes=1, model=mringwgfloor, maxevals=75
                    amp1  = xopt.ma[1],
                    chi2_amp = chi2amp,
                    chi2_cp = chi2cp,
+                   chi2    = rchi2,
                    logp = -sol.minimum)
     return df
 end

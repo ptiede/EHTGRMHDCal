@@ -38,13 +38,14 @@ function rundata(flist, pa_f, data, out, stride)
                        amp1     = zeros(nfiles),
                        chi2_amp = zeros(nfiles),
                        chi2_cp  = zeros(nfiles),
+                       chi2     = zeros(nfiles),
                        logp     = zeros(nfiles),
                        file     = flist
                        )
 
         pitr = Iterators.partition(eachindex(flist), stride)
         for p in pitr
-            rows = map(p) do i
+            rows = pmap(p) do i
                 fit_file(flist[i], data, pa)
             end
             @info "Checkpointing"
@@ -52,7 +53,7 @@ function rundata(flist, pa_f, data, out, stride)
             push!(dftot, eachrow(df[p, 1:end])...)
             CSV.write(out, dftot)
         end
-    en
+    end
     CSV.write(out, dftot)
 
 end
@@ -66,7 +67,7 @@ Run the mring optimizer on a list of hdf5 grmhd files
 - `x`: A file that contains the paths to various GRMHd hdf5 files
 
 # Options
-- `--data <arg>`: path to the directory where the uvfits files for each scan are. This should work by default if you are running this in src
+- `--data <arg>`: path to the directory where the uvfits files for each year are. This should work by default if you are running this in src
 - `--pa <arg>`: The position angles (deg) you want to rotate the images. To pass a list do e.g.  --pa "[0.0, 45.0, 90.0, 135.0]"
 - `--out <arg>`: Where you want to save the output
 - `--stride <arg>`: Checkpoint stride. This should be at least 2x the number of cores you are using.
