@@ -19,4 +19,7 @@ Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 VLBIImagePriors = "b1ba175b-8447-452c-b961-7db2d6f7a029"
 
 [compat]
+Comrade = "0.7"
+
+[compat]
 julia = "^1.8"
