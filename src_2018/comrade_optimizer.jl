@@ -1,24 +1,22 @@
 using Comrade
-using ComradeOptimization
+using Optimization
 using OptimizationMetaheuristics
 using Distributions
 using CSV
 using DataFrames
 using NamedTupleTools
 using VLBIImagePriors
-
-load_ehtim()
-
+using Pyehtim
 const fwhmfac = 2*sqrt(2*log(2))
 
 
-function mringwgfloor(θ)
+function mringwgfloor(θ, meta)
     (;diam, fwhm, ma, mp, floor, ϵ) = θ
 
     rad = diam/2
     σ   = fwhm/fwhmfac
-    α = reshape(ma.*cos.(mp), :)
-    β = reshape(ma.*sin.(mp), :)
+    α = ma.*cos.(mp)
+    β = ma.*sin.(mp)
     ring = smoothed(modify(MRing(α, β), Stretch(rad, rad)), σ)
 
     rg   = diam/fwhmfac*ϵ
@@ -30,19 +28,13 @@ end
 
 function create_prior(::typeof(mringwgfloor), nmodes)
     return (
-            diam = Uniform(μas2rad(10.0), μas2rad(70.0)),
+            diam = Uniform(μas2rad(30.0), μas2rad(70.0)),
             fwhm = Uniform(μas2rad(1.0),  μas2rad(40.0)),
-            ma   = ImageUniform(0.0, 0.5, nmodes, 1),
-            mp   = DiagonalVonMises(fill(0.0, nmodes), fill(inv(π^2), nmodes)),
+            ma   = ntuple(_->Uniform(0.0, 0.5), nmodes),
+            mp   = ntuple(_->Uniform(0.0, 2π), nmodes),
             floor= Uniform(0.0, 1.0),
             ϵ   = Uniform(1.0, 5.0)
         )
-end
-
-function create_post(model, modes, data...)
-    lklhd = RadioLikelihood(model, data...)
-    prior = create_prior(model, modes)
-    return Posterior(lklhd, prior)
 end
 
 
@@ -63,38 +55,29 @@ function loaddata(imfile, datafile, pa; f0=0.6, ferr=0.0)
 
     # Create a synthetic observation to fit
     obs_fit = img.observe_same(obs, ttype="fast", ampcal=true, phasecal=true, add_th_noise=true)
-    #obs_fit.add_amp(debias=true)
-    #obs_fit.add_cphase(count="min-cut0bl")
-    damp = extract_lcamp(obs_fit; snrcut=3.0)
-    dcp  = extract_cphase(obs_fit; snrcut=3.0)
+    dcp, damp = extract_table(obs_fit, ClosurePhases(;snrcut=3.0), VisibilityAmplitudes())
     return damp, dcp
 end
 
-function fit_file(imfile, datafile, pa; modes=1, model=mringwgfloor, maxevals=200_000)
+function fit_file(imfile, datafile, pa; modes=4, model=mringwgfloor, maxevals=200_000)
     damp, dcp = loaddata(imfile, datafile, pa)
-    post = create_post(model, modes, damp, dcp)
+    sky = SkyModel(model, create_prior(model, modes), imagepixels(μas2rad(100.0), μas2rad(100.0), 256, 256))
+    post = VLBIPosterior(sky, damp, dcp)
+
+    xopt, sol = comrade_opt(post, ECA(); maxiters=30_000)
+
+    ndim = dimension(post)
+    chi2amp, chi2cp = chi2(post, xopt)
+    rchi2   = (chi2amp + chi2cp)/(length(damp) + length(dcp) - ndim)
 
 
-    cpost = asflat(post)
-    ndim = dimension(cpost)
-    fopt  = OptimizationFunction(cpost)
-    prob  = Optimization.OptimizationProblem(fopt, rand(ndim), nothing, lb=fill(-5.0, ndim), ub = fill(5.0, ndim))
-    sol   = solve(prob, ECA(); maxiters=maxevals)
-
-    xopt = Comrade.transform(cpost, sol.u)
-
-    chi2amp = chi2(model(xopt), damp)/length(damp)
-    chi2cp  = chi2(model(xopt), dcp)/length(dcp)
-    rchi2   = chi2(model(xopt), damp, dcp)/(length(damp) + length(dcp) - ndim)
-
-
-    df = (pa = pa, diam = xopt.diam,
-                   α  = xopt.fwhm,
-                   ff = xopt.floor,
-                   fwhm_g= xopt.diam*xopt.ϵ,
-                   amp1  = xopt.ma[1],
-                   chi2_amp = chi2amp,
-                   chi2_cp = chi2cp,
+    df = (pa = pa, diam = xopt.sky.diam,
+                   α  = xopt.sky.fwhm,
+                   ff = xopt.sky.floor,
+                   fwhm_g= xopt.sky.diam*xopt.sky.ϵ,
+                   amp1  = xopt.sky.ma[1],
+                   chi2_amp = chi2amp/length(damp),
+                   chi2_cp = chi2cp/length(dcp),
                    chi2    = rchi2,
                    logp = -sol.minimum)
     return df

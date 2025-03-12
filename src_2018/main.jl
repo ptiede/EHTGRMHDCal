@@ -1,8 +1,5 @@
-
+using Pkg; Pkg.activate(@__DIR__)
 using Distributed
-@everywhere begin
-    using Pkg; Pkg.activate(joinpath(@__DIR__, "../"))
-end
 #try
 #    Pkg.resolve()
 #    Pkg.update()
@@ -19,9 +16,7 @@ using Comonicon
 using DelimitedFiles
 using DataFrames
 using CSV
-using Comrade
 
-load_ehtim()
 @everywhere include("comrade_optimizer.jl")
 
 function rundata(flist, pa_f, data, out, stride)
@@ -79,17 +74,18 @@ Run the mring optimizer on a list of hdf5 grmhd files
                     stride::Int = 500
                    )
 
-    println("\tParsed args:")
-    println("\tfilelist => ", x)
-    println("\tdata => ", data)
-    println("\tpa => ", pa)
-    println("\tstride => ", stride)
-    println("\tout => ", out)
-    println("Starting the run I currently have $(nworkers()) workers")
+    @info("Parsed args:\n"*
+                "\tfilelist => $x\n"*
+                "\tdata     => $data\n"*
+                "\tpa       => $pa\n"*
+                "\tstride   => $stride\n"*
+                "\tout      => $out"
+    )
+    @info("Starting the run I currently have $(nworkers()) workers")
 
     # Parse in the pa angles
     pa_f = eval(Meta.parse(pa))
-    println("Hello you are about use $pa_f pa angles")
+    @info("Hello you are about use $pa_f pa angles")
 
     #Read in the file
     flist = open(x, "r") do io
@@ -101,15 +97,15 @@ Run the mring optimizer on a list of hdf5 grmhd files
     end
 
 
-    println("I am about to analyze $(length(flist)) files")
-    println("The first one is $(flist[1])")
-    println("The last one is $(flist[end])")
+    @info("I am about to analyze $(length(flist)) files")
+    @info("The first one is $(flist[1])")
+    @info("The last one is $(flist[end])")
 
     # Now loop over the list of data
     dlist = filter(endswith(".uvfits"), readdir(data, join=true))
     for d in dlist
-        scan = first(splitext(split(d, "_")[end]))
-        println("On $scan")
+        scan = splitext(basename(d))[1]
+        @info("On $d")
         base, ext = splitext(out)
         outscan = base*"_"*scan*ext
         rundata(flist, pa_f, d, outscan, stride)
