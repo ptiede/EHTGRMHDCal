@@ -2,7 +2,7 @@
 
 
 # Reproducing the environment
-**Note I am assuming you have at least julia 1.6 installed**
+**Note I am assuming you have julia 1.6 installed**
 
 Additionally you will require ehtim and dynesty to be installed in a system aware python. Currently I am just using the build in fft so 
 `pip install ehtim`
